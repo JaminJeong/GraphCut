@@ -2,6 +2,7 @@
 import cv2
 import numpy as np
 import maxflow
+import os
 
 
 class GraphMaker:
@@ -16,6 +17,7 @@ class GraphMaker:
     MAXIMUM = 1000000000
 
     def __init__(self):
+        self.filename = None
         self.image = None
         self.graph = None
         self.overlay = None
@@ -32,6 +34,7 @@ class GraphMaker:
         self.current_overlay = self.seeds
 
     def load_image(self, filename):
+        self.filename = filename
         self.image = cv2.imread(filename)
         self.graph = np.zeros_like(self.image)
         self.seed_overlay = np.zeros_like(self.image)
@@ -170,10 +173,86 @@ class GraphMaker:
             print 'Please segment the image before saving.'
             return
 
-        to_save = np.zeros_like(self.image)
+        masked_color_image = self.get_image_with_overlay(self.segmented)
+        fname, ext = os.path.splitext(filename)
+        cv2.imwrite(str(fname) + '_masked_color' + str(ext), masked_color_image)
 
+        to_save = np.zeros([self.image.shape[0], self.image.shape[1]])
+        white_img = np.zeros([self.image.shape[0], self.image.shape[1]])
+        for x in range(self.image.shape[0]):
+            for y in range(self.image.shape[1]):
+                white_img[x][y] = 255
+
+        np.copyto(to_save, white_img, where=self.mask[:,:,0])
+        cv2.imwrite(str(fname) + '_masked_gray' + str(ext), to_save)
+
+        to_save = np.zeros_like(self.image)
         np.copyto(to_save, self.image, where=self.mask)
         cv2.imwrite(str(filename), to_save)
+
+    def save_seeds(self):
+        fname, ext = os.path.splitext(self.filename)
+        of = open(str(fname) + "_seed.txt", 'w')
+
+        # print('foreground_seeds')
+        # if self.foreground_seeds != None:
+        #     for idx in self.foreground_seeds:
+        #         print(idx)
+
+        of.writelines('foreground_seeds\n')
+        for idx in self.foreground_seeds:
+            of.writelines(str(idx) + '\n')
+
+        # print('background_seeds')
+        # if self.background_seeds != None:
+        #     for idx in self.background_seeds:
+        #         print(idx)
+
+        of.writelines('background_seeds\n')
+        for idx in self.background_seeds:
+            of.writelines(str(idx) + '\n')
+
+        of.close()
+
+    def load_seeds(self, readfilename):
+        readfile = open(readfilename, 'r')
+
+        lines = readfile.readlines()
+
+        print(lines)
+
+        read_mode = None
+        self.background_seeds = []
+        self.foreground_seeds = []
+
+        for line in lines:
+            line = line[:-1]
+            if line == 'foreground_seeds':
+                read_mode = self.foreground
+                continue
+            elif line == 'background_seeds':
+                read_mode = self.background
+                continue
+
+            tuple_line = eval(line)
+
+            if read_mode == self.foreground:
+                self.add_seed(tuple_line[0], tuple_line[1], read_mode)
+            elif read_mode == self.background:
+                self.add_seed(tuple_line[0], tuple_line[1], read_mode)
+
+        readfile.close()
+
+        print('foreground_seeds')
+        if self.foreground_seeds != None:
+            for idx in self.foreground_seeds:
+                print(idx)
+
+        print('background_seeds')
+        if self.background_seeds != None:
+            for idx in self.background_seeds:
+                print(idx)
+
 
     @staticmethod
     def get_node_num(x, y, array_shape):
@@ -182,3 +261,4 @@ class GraphMaker:
     @staticmethod
     def get_xy(nodenum, array_shape):
         return (nodenum % array_shape[1]), (nodenum / array_shape[1])
+
