@@ -23,10 +23,10 @@ class CutUI:
             cv2.imshow(self.window, display)
             key = cv2.waitKey(20) & 0xFF
             if key == 27:
-                self.graph_maker.load_seeds("/home/jamin/Downloads/9003454992293_seed.txt")
-                # self.graph_maker.save_seeds()
+                # self.graph_maker.load_seeds("/home/jamin/Downloads/maxresdefault_seed.txt")
+                self.graph_maker.save_seeds()
                 # self.graph_maker.create_graph()
-                # self.graph_maker.save_image("/home/jamin/Downloads/9003454992293_output.jpg")
+                # self.graph_maker.save_image("/home/jamin/Downloads/maxresdefault_output.jpg")
                 break
             elif key == ord('c'):
                 self.graph_maker.clear_seeds()

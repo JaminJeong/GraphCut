@@ -3,20 +3,29 @@ import argparse
 
 import cv2
 import numpy as np
+import os
+
 from GraphMaker import GraphMaker
 
 class CutCommand:
 
-    def __init__(self, filename):
+    def __init__(self, filepath):
         self.graph_maker = GraphMaker()
-        self.graph_maker.load_image(filename)
+        self.file_list = os.listdir(filepath)
 
     def run(self):
-        self.graph_maker.load_seeds("/home/jamin/Downloads/9003454992293_seed.txt")
-        # self.graph_maker.save_seeds()
-        # self.graph_maker.create_graph()
-        # self.graph_maker.save_image("/home/jamin/Downloads/9003454992293_output.jpg")
-
+        for filename in self.file_list:
+            fname, ext = os.path.splitext(filename)
+            if ext == '.jpg':
+                self.graph_maker.load_image(filename)
+                seed_file = None
+                seed_file = str(fname) + "_seed.txt"
+                if seed_file == None:
+                    print("seed_file is None!!")
+                else:
+                    self.graph_maker.load_seeds()
+                    self.graph_maker.create_graph()
+                    self.graph_maker.save_image(str(fname) + "_output.jpg")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog="Interactive Graph Cut",
