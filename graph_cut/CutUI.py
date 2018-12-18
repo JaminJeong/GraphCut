@@ -6,13 +6,14 @@ from GraphMaker import GraphMaker
 
 class CutUI:
 
-    def __init__(self, filename):
+    def __init__(self, filename, output_file):
         self.graph_maker = GraphMaker()
         self.graph_maker.load_image(filename)
         self.display_image = np.array(self.graph_maker.image)
         self.window = "Graph Cut"
         self.mode = self.graph_maker.foreground
         self.started_click = False
+        self.output_file = output_file
 
     def run(self):
         cv2.namedWindow(self.window)
@@ -23,16 +24,13 @@ class CutUI:
             cv2.imshow(self.window, display)
             key = cv2.waitKey(20) & 0xFF
             if key == 27:
-                # self.graph_maker.load_seeds("/home/jamin/Downloads/maxresdefault_seed.txt")
-                self.graph_maker.save_seeds()
-                # self.graph_maker.create_graph()
-                # self.graph_maker.save_image("/home/jamin/Downloads/maxresdefault_output.jpg")
                 break
             elif key == ord('c'):
                 self.graph_maker.clear_seeds()
-            # elif key == ord('g'):
-            #     self.graph_maker.create_graph()
-            #     self.graph_maker.swap_overlay(self.graph_maker.segmented)
+            elif key == ord('g'):
+                self.graph_maker.create_graph()
+                self.graph_maker.swap_overlay(self.graph_maker.segmented)
+                self.graph_maker.save_select_images(self.output_file)
             elif key == ord('t'):
                 self.mode = 1 - self.mode
                 self.graph_maker.swap_overlay(self.graph_maker.seeds)

@@ -11,21 +11,37 @@ class CutCommand:
 
     def __init__(self, filepath):
         self.graph_maker = GraphMaker()
+        self.filepath = filepath
+
+        self.folder_masked_color = os.path.join(self.filepath, "masked_color")
+        self.folder_masked_gray = os.path.join(self.filepath, "masked_gray")
+        self.folder_cut_color = os.path.join(self.filepath, "cut_color")
+
+        if os.path.isdir(self.folder_masked_color) == False:
+            print('make directory : ' + self.folder_masked_color)
+            os.mkdir(self.folder_masked_color)
+        if os.path.isdir(self.folder_masked_gray) == False:
+            print('make directory : ' + self.folder_masked_gray)
+            os.mkdir(self.folder_masked_gray)
+        if os.path.isdir(self.folder_cut_color) == False:
+            print('make directory : ' + self.folder_cut_color)
+            os.mkdir(self.folder_cut_color)
+
         self.file_list = os.listdir(filepath)
 
     def run(self):
         for filename in self.file_list:
             fname, ext = os.path.splitext(filename)
             if ext == '.jpg':
-                self.graph_maker.load_image(filename)
-                seed_file = None
-                seed_file = str(fname) + "_seed.txt"
-                if seed_file == None:
-                    print("seed_file is None!!")
-                else:
-                    self.graph_maker.load_seeds()
-                    self.graph_maker.create_graph()
-                    self.graph_maker.save_image(str(fname) + "_output.jpg")
+                fullpath = os.path.join(self.filepath, filename)
+                self.graph_maker.load_image(fullpath)
+                self.graph_maker.load_seeds()
+                self.graph_maker.create_graph()
+                output_full_filename = os.path.join(self.filepath, str(fname) + "_output.jpg")
+                self.graph_maker.save_path_image(output_full_filename,
+                                                 self.folder_masked_color,
+                                                 self.folder_masked_gray,
+                                                 self.folder_cut_color)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog="Interactive Graph Cut",

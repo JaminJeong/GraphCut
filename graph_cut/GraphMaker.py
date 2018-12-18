@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 import maxflow
 import os
+from graph_cut import common
+
 
 
 class GraphMaker:
@@ -173,26 +175,82 @@ class GraphMaker:
             print 'Please segment the image before saving.'
             return
 
-        masked_color_image = self.get_image_with_overlay(self.segmented)
-        fname, ext = os.path.splitext(filename)
-        cv2.imwrite(str(fname) + '_masked_color' + str(ext), masked_color_image)
-
-        to_save = np.zeros([self.image.shape[0], self.image.shape[1]])
-        white_img = np.zeros([self.image.shape[0], self.image.shape[1]])
-        for x in range(self.image.shape[0]):
-            for y in range(self.image.shape[1]):
-                white_img[x][y] = 255
-
-        np.copyto(to_save, white_img, where=self.mask[:,:,0])
-        cv2.imwrite(str(fname) + '_masked_gray' + str(ext), to_save)
-
         to_save = np.zeros_like(self.image)
+
         np.copyto(to_save, self.image, where=self.mask)
         cv2.imwrite(str(filename), to_save)
 
+    def save_select_images(self, filename, b_masked_color = True, b_masked_gray = False, b_cut_color = False):
+        if self.mask is None:
+            print 'Please segment the image before saving.'
+            return
+
+        if b_masked_color is True:
+            masked_color_image = self.get_image_with_overlay(self.segmented)
+            fname, ext = os.path.splitext(filename)
+            cv2.imwrite(str(fname) + '_masked_color' + str(ext), masked_color_image)
+
+        if b_masked_gray is True:
+            to_save = np.zeros([self.image.shape[0], self.image.shape[1]])
+            white_img = np.zeros([self.image.shape[0], self.image.shape[1]])
+            for x in range(self.image.shape[0]):
+                for y in range(self.image.shape[1]):
+                    white_img[x][y] = 255
+
+            np.copyto(to_save, white_img, where=self.mask[:,:,0])
+            cv2.imwrite(str(fname) + '_masked_gray' + str(ext), to_save)
+
+        if b_cut_color is True:
+            to_save = np.zeros_like(self.image)
+            np.copyto(to_save, self.image, where=self.mask)
+            cv2.imwrite(str(filename), to_save)
+
+
+    def save_path_image(self, filename, outpath_masked_color, outpath_masked_gray, outpath_cut_color):
+        if self.mask is None:
+            print 'Please segment the image before saving.'
+            return
+
+        if outpath_masked_color is not None:
+            fpath, fname, ext = common.split_path_filename_fileext(filename)
+            masked_color_image = self.get_image_with_overlay(self.segmented)
+            fpath = os.path.join(fpath, outpath_masked_color)
+            fullpath = os.path.join(fpath, str(fname) + '_masked_color.jpg')
+            print('generate image : ' + fullpath)
+            cv2.imwrite(fullpath, masked_color_image)
+
+        if outpath_masked_gray is not None:
+            fpath, fname, ext = common.split_path_filename_fileext(filename)
+            fpath = os.path.join(fpath, outpath_masked_gray)
+            fullpath = os.path.join(fpath, str(fname) + '_masked_color.jpg')
+            to_save = np.zeros([self.image.shape[0], self.image.shape[1]])
+            white_img = np.zeros([self.image.shape[0], self.image.shape[1]])
+            for x in range(self.image.shape[0]):
+                for y in range(self.image.shape[1]):
+                    white_img[x][y] = 255
+
+            np.copyto(to_save, white_img, where=self.mask[:,:,0])
+            print('generate image : ' + fullpath)
+            cv2.imwrite(fullpath, to_save)
+
+        if outpath_cut_color is not None:
+            fpath, fname, ext = common.split_path_filename_fileext(filename)
+            fpath = os.path.join(fpath, outpath_cut_color)
+            fullpath = os.path.join(fpath, str(fname) + '_cut_color.jpg')
+
+            to_save = np.zeros_like(self.image)
+            np.copyto(to_save, self.image, where=self.mask)
+            print('generate image : ' + fullpath)
+            cv2.imwrite(fullpath, to_save)
+
     def save_seeds(self):
-        fname, ext = os.path.splitext(self.filename)
-        of = open(str(fname) + "_seed.txt", 'w')
+        fpath, fname, ext = common.split_path_filename_fileext(self.filename)
+        seed_folder = os.path.join(fpath, "seed")
+        if os.path.isdir(seed_folder) == False:
+            os.mkdir(seed_folder)
+
+        fullpath = os.path.join(seed_folder, str(fname) + '_seed.txt')
+        of = open(fullpath, 'w')
 
         # print('foreground_seeds')
         # if self.foreground_seeds != None:
@@ -214,12 +272,13 @@ class GraphMaker:
 
         of.close()
 
-    def load_seeds(self, readfilename):
+    def load_seeds(self):
+        fpath, fname, ext = common.split_path_filename_fileext(self.filename)
+        readfilename = os.path.join(fpath, "seed")
+        readfilename = os.path.join(readfilename, str(fname) + "_seed.txt")
         readfile = open(readfilename, 'r')
 
         lines = readfile.readlines()
-
-        print(lines)
 
         read_mode = None
         self.background_seeds = []
@@ -243,15 +302,15 @@ class GraphMaker:
 
         readfile.close()
 
-        print('foreground_seeds')
-        if self.foreground_seeds != None:
-            for idx in self.foreground_seeds:
-                print(idx)
-
-        print('background_seeds')
-        if self.background_seeds != None:
-            for idx in self.background_seeds:
-                print(idx)
+        # print('foreground_seeds')
+        # if self.foreground_seeds != None:
+        #     for idx in self.foreground_seeds:
+        #         print(idx)
+        #
+        # print('background_seeds')
+        # if self.background_seeds != None:
+        #     for idx in self.background_seeds:
+        #         print(idx)
 
 
     @staticmethod
@@ -261,4 +320,3 @@ class GraphMaker:
     @staticmethod
     def get_xy(nodenum, array_shape):
         return (nodenum % array_shape[1]), (nodenum / array_shape[1])
-
