@@ -6,11 +6,52 @@ the program builds a graph from the image pixels where the weights between pixel
 represent the difference between them. To segment the image a minimum cut is performed on the graph.
 
 The interface:
-![GUI](https://github.com/NathanZabriskie/GraphCut/blob/master/images/graphCut.png "Custom PyQT interface")
+![GUI](https://github.com/mooneclipse03/GraphCut/blob/master/images/graphCut.png "Custom PyQT interface")
 
 And an example result:
 
-![before](https://github.com/NathanZabriskie/GraphCut/blob/master/resource/dood.jpg "Before")
-![after](https://github.com/NathanZabriskie/GraphCut/blob/master/images/segmented.png "After")
+![before](https://github.com/mooneclipse03/GraphCut/blob/master/resource/dood.jpg "Before")
+![after](https://github.com/mooneclipse03/GraphCut/blob/master/images/segmented.png "After")
 
-To run the program start up NewCutUI.py
+## To run the program start up
+### QT
+```bash
+sh QtGui.sh
+```
+
+### OpenCV UI
+necessary, one input file and one output file
+```bash
+sh cv.sh
+```
+
+### OpenCV UI (sub-folders)
+It split calculation and user's guide
+#### draw user's guide
+```bash
+sh cvFolder.sh
+```
+#### calculation
+```bash
+sh create_graph_folder.sh
+cd /your/image/file/path
+tree -d
+.
+├── cut_color
+├── masked_color
+├── masked_gray
+└── seed
+```
+
+## Requirements
+* python2
+* opencv >= 3.4
+* numpy
+* PyMaxflow
+* PyQt4
+
+## Reference
+
+***
+
+[1] [NathanZabriskie/GraphCut](https://github.com/NathanZabriskie/GraphCut) <br/>
