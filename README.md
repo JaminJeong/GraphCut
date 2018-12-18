@@ -28,6 +28,13 @@ sh cv.sh
 ### OpenCV UI (sub-folders)
 It split calculation and user's guide
 #### draw user's guide
+##### key event
+ * s : previous image
+ * d : next image
+ * c : clear seed prints
+ * t : change seed's mode (foreground mode or bach background mode)
+ * ESC : exit
+
 ```bash
 sh cvFolder.sh
 ```
@@ -52,6 +59,5 @@ tree -d
 
 ## Reference
 
-***
 
 [1] [NathanZabriskie/GraphCut](https://github.com/NathanZabriskie/GraphCut) <br/>
