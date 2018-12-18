@@ -95,12 +95,16 @@ class GraphMaker:
         self.foreground_average = np.zeros(3)
 
         for coordinate in self.background_seeds:
+            coordinate[1] = coordinate[1] % self.image.shape[0]
+            coordinate[0] = coordinate[0] % self.image.shape[1]
             self.graph[coordinate[1] - 1, coordinate[0] - 1] = 0
             #self.background_average += self.image[coordinate[1], coordinate[0]]
 
         #self.background_average /= len(self.background_seeds)
 
         for coordinate in self.foreground_seeds:
+            coordinate[1] = coordinate[1] % self.image.shape[0]
+            coordinate[0] = coordinate[0] % self.image.shape[1]
             self.graph[coordinate[1] - 1, coordinate[0] - 1] = 1
             #self.foreground_average += self.image[coordinate[1], coordinate[0]]
 
