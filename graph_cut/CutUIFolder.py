@@ -28,14 +28,14 @@ class CutUIFolder:
 
             self.graph_maker.load_image(self.file_list[self.index])
             self.display_image = np.array(self.graph_maker.image)
-            self.window = str("Graph Cut - [ ") + str(self.index) + ' / '+ str(len(self.file_list)) + " ]" + self.file_list_image[idx]
+            self.window = str("Graph Cut - [ ") + str(self.index + 1) + ' / '+ str(len(self.file_list)) + " ]" + self.file_list_image[idx]
 
     def _refresh(self):
         self.graph_maker.clear_seeds()
         self.graph_maker.load_image(self.file_list[self.index])
         self.display_image = np.array(self.graph_maker.image)
         self.mode = self.graph_maker.foreground
-        self.window = str("Graph Cut - [ ") + str(self.index) + ' / ' + str(len(self.file_list)) + " ]" + self.file_list_image[idx]
+        self.window = str("Graph Cut - [ ") + str(self.index + 1) + ' / ' + str(len(self.file_list)) + " ]" + self.file_list_image[idx]
 
     def run(self):
         cv2.namedWindow(self.window)
