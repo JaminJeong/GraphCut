@@ -238,7 +238,7 @@ class GraphMaker:
         if outpath_masked_gray is not None:
             fpath, fname, ext = common.split_path_filename_fileext(filename)
             fpath = os.path.join(fpath, outpath_masked_gray)
-            fullpath = os.path.join(fpath, str(fname) + '_masked_color.jpg')
+            fullpath = os.path.join(fpath, str(fname) + '_masked_gray.jpg')
             to_save = np.zeros([self.image.shape[0], self.image.shape[1]])
             white_img = np.zeros([self.image.shape[0], self.image.shape[1]])
             for x in range(self.image.shape[0]):

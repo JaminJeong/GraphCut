@@ -3,6 +3,7 @@ import cv2
 import os
 import numpy as np
 from GraphMaker import GraphMaker
+from graph_cut import DrawText
 
 
 class CutUIFolder:
@@ -10,6 +11,7 @@ class CutUIFolder:
     def __init__(self, foldername):
         self.graph_maker = GraphMaker()
         self.window = "Graph Cut"
+        self.output_text = "Graph Cut"
         self.mode = self.graph_maker.foreground
         self.started_click = False
         self.file_list = os.listdir(foldername)
@@ -28,14 +30,14 @@ class CutUIFolder:
 
             self.graph_maker.load_image(self.file_list[self.index])
             self.display_image = np.array(self.graph_maker.image)
-            self.window = str("Graph Cut - [ ") + str(self.index + 1) + ' / '+ str(len(self.file_list)) + " ]" + self.file_list_image[idx]
+            self.output_text = str("Graph Cut - [ ") + str(self.index + 1) + ' / ' + str(len(self.file_list)) + " ] " + self.file_list_image[self.index]
 
     def _refresh(self):
         self.graph_maker.clear_seeds()
         self.graph_maker.load_image(self.file_list[self.index])
         self.display_image = np.array(self.graph_maker.image)
         self.mode = self.graph_maker.foreground
-        self.window = str("Graph Cut - [ ") + str(self.index + 1) + ' / ' + str(len(self.file_list)) + " ]" + self.file_list_image[idx]
+        self.output_text = str("Graph Cut - [ ") + str(self.index + 1) + ' / ' + str(len(self.file_list)) + " ] " + self.file_list_image[self.index]
 
     def run(self):
         cv2.namedWindow(self.window)
@@ -43,7 +45,11 @@ class CutUIFolder:
 
         while 1:
             display = cv2.addWeighted(self.display_image, 0.9, self.graph_maker.get_overlay(), 0.4, 0.1)
-            cv2.imshow(self.window, display)
+            text_background = np.zeros((50, display.shape[1], 3), np.uint8)
+            text_background[:] = DrawText.color_string_map['white']
+            display_window = cv2.vconcat((display.copy(), text_background))
+            DrawText.draw_FiilText(display_window, self.output_text, 10, int(display_window.shape[0]))
+            cv2.imshow(self.window, display_window)
             key = cv2.waitKey(20) & 0xFF
             if key == 27:
                 self.graph_maker.save_seeds()
