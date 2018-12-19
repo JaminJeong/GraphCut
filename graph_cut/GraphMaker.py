@@ -4,6 +4,7 @@ import numpy as np
 import maxflow
 import os
 from graph_cut import common
+from graph_cut import Color
 
 
 
@@ -34,6 +35,7 @@ class GraphMaker:
         self.nodes = []
         self.edges = []
         self.current_overlay = self.seeds
+        self.seed_point_size = 2
 
     def load_image(self, filename):
         self.filename = filename
@@ -49,11 +51,11 @@ class GraphMaker:
         if type == self.background:
             if not self.background_seeds.__contains__((x, y)):
                 self.background_seeds.append((x, y))
-                cv2.rectangle(self.seed_overlay, (x-1, y-1), (x+1, y+1), (0, 0, 255), -1)
+                cv2.rectangle(self.seed_overlay, (x-self.seed_point_size, y-self.seed_point_size), (x+self.seed_point_size, y+self.seed_point_size), Color.cv_color_string_map["green"], -1)
         elif type == self.foreground:
             if not self.foreground_seeds.__contains__((x, y)):
                 self.foreground_seeds.append((x, y))
-                cv2.rectangle(self.seed_overlay, (x-1, y-1), (x+1, y+1), (0, 255, 0), -1)
+                cv2.rectangle(self.seed_overlay, (x-self.seed_point_size, y-self.seed_point_size), (x+self.seed_point_size, y+self.seed_point_size), Color.cv_color_string_map["red"], -1)
 
     def clear_seeds(self):
         self.background_seeds = []
@@ -66,7 +68,7 @@ class GraphMaker:
         for seed in self.background_seeds:
             x = seed[0]
             y = seed[1]
-            cv2.rectangle(self.seed_overlay, (x - 1, y - 1), (x + 1, y + 1), (0, 0, 255), -1)
+            cv2.rectangle(self.seed_overlay, (x - self.seed_point_size, y - self.seed_point_size), (x + self.seed_point_size, y + self.seed_point_size), Color.cv_color_string_map['green'], -1)
 
     def clear_background_seeds(self):
         self.background_seeds = []
@@ -74,7 +76,7 @@ class GraphMaker:
         for seed in self.foreground_seeds:
             x = seed[0]
             y = seed[1]
-            cv2.rectangle(self.seed_overlay, (x - 1, y - 1), (x + 1, y + 1), (0, 0, 255), -1)
+            cv2.rectangle(self.seed_overlay, (x - self.seed_point_size, y - self.seed_point_size), (x + self.seed_point_size, y + self.seed_point_size), Color.cv_color_string_map['blue'], -1)
 
     def get_overlay(self):
         if self.current_overlay == self.seeds:

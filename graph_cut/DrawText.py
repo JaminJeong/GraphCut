@@ -1,19 +1,11 @@
 import cv2
-
-color_string_map = {
-    'red': [255, 0, 0],
-    'blue': [0, 255, 0],
-    'green': [0, 0, 255],
-    'black': [0, 0, 0],
-    'white': [255, 255, 255],
-    'yellow': [0, 255, 255],
-}
+from graph_cut import Color
 
 def draw_FiilText(draw_img,
                   text,
                   p1_x, p1_y,
-                  color_font=color_string_map['yellow'],
-                  color_fill=color_string_map['black'],
+                  color_font=Color.color_string_map['yellow'],
+                  color_fill=Color.color_string_map['black'],
                   font=cv2.FONT_HERSHEY_SIMPLEX,
                   font_scale=1,
                   thickness=2):
