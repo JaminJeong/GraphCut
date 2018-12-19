@@ -60,6 +60,22 @@ class GraphMaker:
         self.foreground_seeds = []
         self.seed_overlay = np.zeros_like(self.seed_overlay)
 
+    def clear_foreground_seeds(self):
+        self.foreground_seeds = []
+        self.seed_overlay = np.zeros_like(self.seed_overlay)
+        for seed in self.background_seeds:
+            x = seed[0]
+            y = seed[1]
+            cv2.rectangle(self.seed_overlay, (x - 1, y - 1), (x + 1, y + 1), (0, 0, 255), -1)
+
+    def clear_background_seeds(self):
+        self.background_seeds = []
+        self.seed_overlay = np.zeros_like(self.seed_overlay)
+        for seed in self.foreground_seeds:
+            x = seed[0]
+            y = seed[1]
+            cv2.rectangle(self.seed_overlay, (x - 1, y - 1), (x + 1, y + 1), (0, 0, 255), -1)
+
     def get_overlay(self):
         if self.current_overlay == self.seeds:
             return self.seed_overlay

@@ -31,7 +31,9 @@ It split calculation and user's guide
 ##### key event
  * s : previous image
  * d : next image
- * c : clear seed prints
+ * c : clear seed
+ * f : clear foreground seed
+ * b : clear background seed
  * t : change seed's mode (foreground mode or bach background mode)
  * ESC : exit
 

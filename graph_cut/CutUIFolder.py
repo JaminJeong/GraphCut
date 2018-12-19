@@ -28,12 +28,14 @@ class CutUIFolder:
 
             self.graph_maker.load_image(self.file_list[self.index])
             self.display_image = np.array(self.graph_maker.image)
+            self.window = str("Graph Cut - [ ") + str(self.index) + ' / '+ str(len(self.file_list)) + " ]" + self.file_list_image[idx]
 
     def _refresh(self):
         self.graph_maker.clear_seeds()
         self.graph_maker.load_image(self.file_list[self.index])
         self.display_image = np.array(self.graph_maker.image)
         self.mode = self.graph_maker.foreground
+        self.window = str("Graph Cut - [ ") + str(self.index) + ' / ' + str(len(self.file_list)) + " ]" + self.file_list_image[idx]
 
     def run(self):
         cv2.namedWindow(self.window)
@@ -48,6 +50,10 @@ class CutUIFolder:
                 break
             elif key == ord('c'):
                 self.graph_maker.clear_seeds()
+            elif key == ord('f'):
+                self.graph_maker.clear_foreground_seeds()
+            elif key == ord('b'):
+                self.graph_maker.clear_background_seeds()
 
             elif key == ord('s'): # previous
                 self.graph_maker.save_seeds()
