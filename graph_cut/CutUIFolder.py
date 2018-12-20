@@ -19,6 +19,11 @@ class CutUIFolder:
         self.index = 0
         self.file_list_image = []
 
+        if self.mode == 1:
+            self.mode_name = 'foreground'
+        else:
+            self.mode_name = 'background'
+
         if len(self.file_list) != 0:
             for idx, filename in enumerate(self.file_list):
                 if filename.find('.jpg') != -1:
@@ -30,14 +35,18 @@ class CutUIFolder:
 
             self.graph_maker.load_image(self.file_list[self.index])
             self.display_image = np.array(self.graph_maker.image)
-            self.output_text = str("Graph Cut - [ ") + str(self.index + 1) + ' / ' + str(len(self.file_list)) + " ] " + self.file_list_image[self.index]
+            self.output_text = self.mode_name + str("- [ ") + str(self.index + 1) + ' / ' + str(len(self.file_list)) + " ] " + self.file_list_image[self.index]
 
     def _refresh(self):
         self.graph_maker.clear_seeds()
         self.graph_maker.load_image(self.file_list[self.index])
         self.display_image = np.array(self.graph_maker.image)
         self.mode = self.graph_maker.foreground
-        self.output_text = str("Graph Cut - [ ") + str(self.index + 1) + ' / ' + str(len(self.file_list)) + " ] " + self.file_list_image[self.index]
+        if self.mode == 1:
+            self.mode_name = 'foreground'
+        else:
+            self.mode_name = 'background'
+        self.output_text = self.mode_name + str("- [ ") + str(self.index + 1) + ' / ' + str(len(self.file_list)) + " ] " + self.file_list_image[self.index]
 
     def run(self):
         cv2.namedWindow(self.window)
@@ -75,7 +84,16 @@ class CutUIFolder:
 
             elif key == ord('t'):
                 self.mode = 1 - self.mode
+                if self.mode == 1:
+                    self.mode_name = 'foreground'
+                else:
+                    self.mode_name = 'background'
+
+                self.output_text = self.mode_name + str("- [ ") + str(self.index + 1) + ' / ' + str(
+                    len(self.file_list)) + " ] " + self.file_list_image[self.index]
+
                 self.graph_maker.swap_overlay(self.graph_maker.seeds)
+
 
         cv2.destroyAllWindows()
 
