@@ -46,7 +46,7 @@ class CutUIFolder:
         while 1:
             display = cv2.addWeighted(self.display_image, 0.9, self.graph_maker.get_overlay(), 0.4, 0.1)
             text_background = np.zeros((50, display.shape[1], 3), np.uint8)
-            text_background[:] = DrawText.color_string_map['white']
+            text_background[:] = DrawText.Color.color_string_map['white']
             display_window = cv2.vconcat((display.copy(), text_background))
             DrawText.draw_FiilText(display_window, self.output_text, 10, int(display_window.shape[0]))
             cv2.imshow(self.window, display_window)
