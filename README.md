@@ -21,6 +21,7 @@ sh QtGui.sh
 
 ### OpenCV UI
 necessary, one input file and one output file
+* don't use now !!
 ```bash
 sh cv.sh
 ```
@@ -58,6 +59,21 @@ tree -d
 * numpy
 * PyMaxflow
 * PyQt4
+
+## Docker Hub
+```bash
+sudo xhost +
+sudo docker pull mooneclipse03/graphcut
+sudo bash start_docker.sh
+```
+
+## Docker Build
+```bash
+sudo xhost +
+sudo docker build -t mooneclipse03/grpahcut .
+sudo bash start_docker.sh
+```
+
 
 ## Reference
 
