@@ -29,6 +29,7 @@ sh cv.sh
 ### OpenCV UI (sub-folders)
 It split calculation and user's guide
 #### draw user's guide
+ * ctr+left click : remove seed
 ##### key event
  * s : previous image
  * d : next image
