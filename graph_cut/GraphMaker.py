@@ -1,10 +1,10 @@
+
 import cv2
 import numpy as np
 import maxflow
 import os
 from graph_cut import common
 from graph_cut import Color
-
 
 
 class GraphMaker:
@@ -26,7 +26,7 @@ class GraphMaker:
         self.seed_overlay = None
         self.segment_overlay = None
         self.mask = None
-        self.load_image('resource/default.jpg')
+        # self.load_image('resource/default.jpg')
         self.background_seeds = []
         self.foreground_seeds = []
         self.background_average = np.array(3)
@@ -35,6 +35,7 @@ class GraphMaker:
         self.edges = []
         self.current_overlay = self.seeds
         self.seed_point_size = 2
+        self.erase_size = 3
 
     def load_image(self, filename):
         self.filename = filename
@@ -44,18 +45,81 @@ class GraphMaker:
         self.segment_overlay = np.zeros_like(self.image)
         self.mask = None
 
+    def resize_image(self, img, fixed_width):
+        self.ori_width = img.shape[1]
+        self.ori_height = img.shape[0]
+        fx = float(fixed_width) / float(self.ori_width)
+        self.image = cv2.resize(img, (int(self.ori_width * fx), int(self.ori_height * fx)),
+                                interpolation=cv2.INTER_CUBIC)
+        self.resize_width = self.image.shape[1]
+        self.resize_height = self.image.shape[0]
+        self.graph = np.zeros_like(self.image)
+        self.seed_overlay = np.zeros_like(self.image)
+        self.segment_overlay = np.zeros_like(self.image)
+        self.mask = None
+
+
     def add_seed(self, x, y, type):
         if self.image is None:
             print 'Please load an image before adding seeds.'
+        x = float(x) / float(self.resize_width)
+        y = float(y) / float(self.resize_height)
         if type == self.background:
             if not self.background_seeds.__contains__((x, y)):
                 self.background_seeds.append((x, y))
-                cv2.rectangle(self.seed_overlay, (x-self.seed_point_size, y-self.seed_point_size), (x+self.seed_point_size, y+self.seed_point_size), Color.cv_color_string_map["green"], -1)
+                x = int(x * self.resize_width)
+                y = int(y * self.resize_height)
+                cv2.rectangle(self.seed_overlay, (x-self.seed_point_size, y-self.seed_point_size), (x+self.seed_point_size, y+self.seed_point_size), Color.cv_color_string_map["red"], -1)
         elif type == self.foreground:
             if not self.foreground_seeds.__contains__((x, y)):
                 self.foreground_seeds.append((x, y))
-                cv2.rectangle(self.seed_overlay, (x-self.seed_point_size, y-self.seed_point_size), (x+self.seed_point_size, y+self.seed_point_size), Color.cv_color_string_map["red"], -1)
+                x = int(x * self.resize_width)
+                y = int(y * self.resize_height)
+                cv2.rectangle(self.seed_overlay, (x-self.seed_point_size, y-self.seed_point_size), (x+self.seed_point_size, y+self.seed_point_size), Color.cv_color_string_map["blue"], -1)
 
+    def add_seed_make(self, x, y, type):
+        if self.image is None:
+            print
+            'Please load an image before adding seeds.'
+        if type == self.background:
+            if not self.background_seeds.__contains__((x, y)):
+                self.background_seeds.append((x, y))
+                cv2.rectangle(self.seed_overlay, (x - self.seed_point_size, y - self.seed_point_size),
+                              (x + self.seed_point_size, y + self.seed_point_size),
+                              Color.cv_color_string_map["red"], -1)
+        elif type == self.foreground:
+            if not self.foreground_seeds.__contains__((x, y)):
+                self.foreground_seeds.append((x, y))
+                cv2.rectangle(self.seed_overlay, (x - self.seed_point_size, y - self.seed_point_size),
+                              (x + self.seed_point_size, y + self.seed_point_size),
+                              Color.cv_color_string_map["blue"], -1)
+#########################################################################################################
+    def delete_seed(self, x, y, type):
+        if self.image is None:
+            print
+            'Please load an image before adding seeds.'
+        if type == self.background:
+            for (back_x, back_y) in self.background_seeds:
+                back_x_up = int(back_x * self.resize_width)
+                back_y_up = int(back_y * self.resize_height)
+                if back_x_up > x - self.erase_size and back_y_up > y - self.erase_size and back_x_up < x + self.erase_size and back_y_up < y + self.erase_size:
+                    self.background_seeds.remove((back_x, back_y))
+                    cv2.rectangle(self.seed_overlay, (x - self.erase_size, y - self.erase_size),
+                                  (x + self.erase_size, y + self.erase_size),
+                                  Color.cv_color_string_map["black"],
+                                  -1)
+
+        elif type == self.foreground:
+            for (back_x, back_y) in self.foreground_seeds:
+                back_x_up = int(back_x * self.resize_width)
+                back_y_up = int(back_y * self.resize_height)
+                if back_x_up > x - self.erase_size and back_y_up > y - self.erase_size and back_x_up < x + self.erase_size and back_y_up < y + self.erase_size:
+                    self.foreground_seeds.remove((back_x, back_y))
+                    cv2.rectangle(self.seed_overlay, (x - self.erase_size, y - self.erase_size),
+                                  (x + self.erase_size, y + self.erase_size),
+                                  Color.cv_color_string_map["black"],
+                                  -1)
+###############################################################################################################################
     def clear_seeds(self):
         self.background_seeds = []
         self.foreground_seeds = []
@@ -67,7 +131,9 @@ class GraphMaker:
         for seed in self.background_seeds:
             x = seed[0]
             y = seed[1]
-            cv2.rectangle(self.seed_overlay, (x - self.seed_point_size, y - self.seed_point_size), (x + self.seed_point_size, y + self.seed_point_size), Color.cv_color_string_map['green'], -1)
+            x = int(x * self.resize_width)
+            y = int(y * self.resize_height)
+            cv2.rectangle(self.seed_overlay, (x - self.seed_point_size, y - self.seed_point_size), (x + self.seed_point_size, y + self.seed_point_size), Color.cv_color_string_map['red'], -1)
 
     def clear_background_seeds(self):
         self.background_seeds = []
@@ -75,8 +141,34 @@ class GraphMaker:
         for seed in self.foreground_seeds:
             x = seed[0]
             y = seed[1]
+            x = int(x * self.resize_width)
+            y = int(y * self.resize_height)
             cv2.rectangle(self.seed_overlay, (x - self.seed_point_size, y - self.seed_point_size), (x + self.seed_point_size, y + self.seed_point_size), Color.cv_color_string_map['blue'], -1)
 
+#########################################################################################################################
+    def overlay_seeds(self, foreground, background):
+        self.background_seeds = []
+        self.foreground_seeds = []
+        self.background_seeds = background
+        self.foreground_seeds = foreground
+        self.seed_overlay = np.zeros_like(self.seed_overlay)
+        for seed in self.background_seeds:
+            x = seed[0]
+            y = seed[1]
+            x = int(x * self.resize_width)
+            y = int(y * self.resize_height)
+            cv2.rectangle(self.seed_overlay, (x - self.seed_point_size, y - self.seed_point_size),
+                          (x + self.seed_point_size, y + self.seed_point_size), Color.cv_color_string_map["red"], -1)
+
+        for seed in self.foreground_seeds:
+            x = seed[0]
+            y = seed[1]
+            x = int(x * self.resize_width)
+            y = int(y * self.resize_height)
+            cv2.rectangle(self.seed_overlay, (x - self.seed_point_size, y - self.seed_point_size),
+                          (x + self.seed_point_size, y + self.seed_point_size), Color.cv_color_string_map["blue"], -1)
+
+##########################################################################################################################
     def get_overlay(self):
         if self.current_overlay == self.seeds:
             return self.seed_overlay
@@ -276,7 +368,9 @@ class GraphMaker:
 
         of.writelines('foreground_seeds\n')
         for idx in self.foreground_seeds:
+            idx = (int(idx[0]*self.ori_width), int(idx[1]*self.ori_height))
             of.writelines(str(idx) + '\n')
+
 
         # print('background_seeds')
         # if self.background_seeds != None:
@@ -285,6 +379,7 @@ class GraphMaker:
 
         of.writelines('background_seeds\n')
         for idx in self.background_seeds:
+            idx = (int(idx[0]*self.ori_width), int(idx[1]*self.ori_height))
             of.writelines(str(idx) + '\n')
 
         of.close()
@@ -313,9 +408,9 @@ class GraphMaker:
             tuple_line = eval(line)
 
             if read_mode == self.foreground:
-                self.add_seed(tuple_line[0], tuple_line[1], read_mode)
+                self.add_seed_make(tuple_line[0], tuple_line[1], read_mode)
             elif read_mode == self.background:
-                self.add_seed(tuple_line[0], tuple_line[1], read_mode)
+                self.add_seed_make(tuple_line[0], tuple_line[1], read_mode)
 
         readfile.close()
 

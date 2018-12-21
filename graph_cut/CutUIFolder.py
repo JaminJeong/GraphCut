@@ -18,6 +18,7 @@ class CutUIFolder:
         self.foldername = foldername
         self.index = 0
         self.file_list_image = []
+        self.fixed_widht = 600
 
         if self.mode == 1:
             self.mode_name = 'foreground'
@@ -34,12 +35,17 @@ class CutUIFolder:
                 self.file_list.append(os.path.join(self.foldername, self.file_list_image[idx]))
 
             self.graph_maker.load_image(self.file_list[self.index])
+            self.graph_maker.resize_image(self.graph_maker.image, self.fixed_widht)
             self.display_image = np.array(self.graph_maker.image)
             self.output_text = self.mode_name + str("- [ ") + str(self.index + 1) + ' / ' + str(len(self.file_list)) + " ] " + self.file_list_image[self.index]
 
+        self.all_foreground_seed = [[]]*len(self.file_list_image)
+        self.all_background_seed = [[]]*len(self.file_list_image)
     def _refresh(self):
         self.graph_maker.clear_seeds()
         self.graph_maker.load_image(self.file_list[self.index])
+        self.graph_maker.resize_image(self.graph_maker.image, self.fixed_widht)
+        self.graph_maker.overlay_seeds(foreground=self.all_foreground_seed[self.index][:], background=self.all_background_seed[self.index][:])
         self.display_image = np.array(self.graph_maker.image)
         self.mode = self.graph_maker.foreground
         if self.mode == 1:
@@ -47,7 +53,6 @@ class CutUIFolder:
         else:
             self.mode_name = 'background'
         self.output_text = self.mode_name + str("- [ ") + str(self.index + 1) + ' / ' + str(len(self.file_list)) + " ] " + self.file_list_image[self.index]
-
     def run(self):
         cv2.namedWindow(self.window)
         cv2.setMouseCallback(self.window, self.draw_line)
@@ -73,12 +78,17 @@ class CutUIFolder:
             elif key == ord('s'): # previous
                 self.graph_maker.save_seeds()
                 if self.index > 0:
+                    self.all_foreground_seed[self.index] = self.graph_maker.foreground_seeds
+                    self.all_background_seed[self.index] = self.graph_maker.background_seeds
                     self.index -= 1
                     self._refresh()
 
+
             elif key == ord('d'): # next
                 self.graph_maker.save_seeds()
-                if self.index < len(self.file_list) - 1:
+                if self.index < len(self.file_list)-1:
+                    self.all_foreground_seed[self.index] = self.graph_maker.foreground_seeds
+                    self.all_background_seed[self.index] = self.graph_maker.background_seeds
                     self.index += 1
                     self._refresh()
 
@@ -98,13 +108,27 @@ class CutUIFolder:
         cv2.destroyAllWindows()
 
     def draw_line(self, event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            self.started_click = True
-            self.graph_maker.add_seed(x - 1, y - 1, self.mode)
 
-        elif event == cv2.EVENT_LBUTTONUP:
-            self.started_click = False
+        if flags == cv2.EVENT_FLAG_CTRLKEY+cv2.EVENT_FLAG_LBUTTON:
+            if event == cv2.EVENT_LBUTTONDOWN:
+                self.started_click = True
+                self.graph_maker.delete_seed(x - 1, y - 1, self.mode)
 
-        elif event == cv2.EVENT_MOUSEMOVE:
-            if self.started_click:
+            elif event == cv2.EVENT_LBUTTONUP:
+                self.started_click = False
+
+            elif event == cv2.EVENT_MOUSEMOVE:
+                if self.started_click:
+                    self.graph_maker.delete_seed(x - 1, y - 1, self.mode)
+
+        else:
+            if event == cv2.EVENT_LBUTTONDOWN:
+                self.started_click = True
                 self.graph_maker.add_seed(x - 1, y - 1, self.mode)
+
+            elif event == cv2.EVENT_LBUTTONUP:
+                self.started_click = False
+
+            elif event == cv2.EVENT_MOUSEMOVE:
+                if self.started_click:
+                    self.graph_maker.add_seed(x - 1, y - 1, self.mode)
