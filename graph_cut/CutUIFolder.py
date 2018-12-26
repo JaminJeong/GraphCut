@@ -17,6 +17,7 @@ class CutUIFolder:
         self.file_list = os.listdir(foldername)
         self.foldername = foldername
         self.index = 0
+        self.obj_idx = 0
         self.file_list_image = []
         self.fixed_widht = 600
 
@@ -37,22 +38,36 @@ class CutUIFolder:
             self.graph_maker.load_image(self.file_list[self.index])
             self.graph_maker.resize_image(self.graph_maker.image, self.fixed_widht)
             self.display_image = np.array(self.graph_maker.image)
-            self.output_text = self.mode_name + str("- [ ") + str(self.index + 1) + ' / ' + str(len(self.file_list)) + " ] " + self.file_list_image[self.index]
+            self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
+                    len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(self.obj_idx) + "]"
 
         self.all_foreground_seed = [[]]*len(self.file_list_image)
         self.all_background_seed = [[]]*len(self.file_list_image)
+
+        self.one_image_foreground_seed = []
+        self.one_image_background_seed = []
     def _refresh(self):
+        self.obj_idx = 0
+        self.one_image_foreground_seed = self.all_foreground_seed[self.index][:]
+        self.one_image_background_seed = self.all_background_seed[self.index][:]
         self.graph_maker.clear_seeds()
         self.graph_maker.load_image(self.file_list[self.index])
         self.graph_maker.resize_image(self.graph_maker.image, self.fixed_widht)
-        self.graph_maker.overlay_seeds(foreground=self.all_foreground_seed[self.index][:], background=self.all_background_seed[self.index][:])
+
+        try:
+            self.graph_maker.overlay_seeds(foreground=self.one_image_foreground_seed[self.obj_idx][:],
+                                       background=self.one_image_background_seed[self.obj_idx][:])
+        except:
+            self.graph_maker.overlay_seeds(foreground=self.one_image_foreground_seed[:],
+                                           background=self.one_image_background_seed[:])
         self.display_image = np.array(self.graph_maker.image)
         self.mode = self.graph_maker.foreground
         if self.mode == 1:
             self.mode_name = 'foreground'
         else:
             self.mode_name = 'background'
-        self.output_text = self.mode_name + str("- [ ") + str(self.index + 1) + ' / ' + str(len(self.file_list)) + " ] " + self.file_list_image[self.index]
+        self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
+                    len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(self.obj_idx) + "]"
     def run(self):
         cv2.namedWindow(self.window)
         cv2.setMouseCallback(self.window, self.draw_line)
@@ -66,8 +81,17 @@ class CutUIFolder:
             cv2.imshow(self.window, display_window)
             key = cv2.waitKey(20) & 0xFF
             if key == 27:
-                self.graph_maker.save_seeds()
-                break
+                try:
+                    self.one_image_foreground_seed[self.obj_idx]
+                except:
+                    self.one_image_foreground_seed.append(self.graph_maker.foreground_seeds)
+                    self.one_image_background_seed.append(self.graph_maker.background_seeds)
+                else:
+                    self.one_image_foreground_seed[self.obj_idx] = self.graph_maker.foreground_seeds
+                    self.one_image_background_seed[self.obj_idx] = self.graph_maker.background_seeds
+                for i in range(len(self.one_image_foreground_seed)):
+                    self.graph_maker.save_seeds_custom(self.one_image_foreground_seed[i], self.one_image_background_seed[i], i)
+                print("Complete save seed at this image")
             elif key == ord('c'):
                 self.graph_maker.clear_seeds()
             elif key == ord('f'):
@@ -76,19 +100,19 @@ class CutUIFolder:
                 self.graph_maker.clear_background_seeds()
 
             elif key == ord('s'): # previous
-                self.graph_maker.save_seeds()
                 if self.index > 0:
-                    self.all_foreground_seed[self.index] = self.graph_maker.foreground_seeds
-                    self.all_background_seed[self.index] = self.graph_maker.background_seeds
+                    self.one_image_save_seed()
+                    self.all_foreground_seed[self.index] = self.one_image_foreground_seed
+                    self.all_background_seed[self.index] = self.one_image_background_seed
                     self.index -= 1
                     self._refresh()
 
 
             elif key == ord('d'): # next
-                self.graph_maker.save_seeds()
                 if self.index < len(self.file_list)-1:
-                    self.all_foreground_seed[self.index] = self.graph_maker.foreground_seeds
-                    self.all_background_seed[self.index] = self.graph_maker.background_seeds
+                    self.one_image_save_seed()
+                    self.all_foreground_seed[self.index] = self.one_image_foreground_seed
+                    self.all_background_seed[self.index] = self.one_image_background_seed
                     self.index += 1
                     self._refresh()
 
@@ -99,11 +123,58 @@ class CutUIFolder:
                 else:
                     self.mode_name = 'background'
 
-                self.output_text = self.mode_name + str("- [ ") + str(self.index + 1) + ' / ' + str(
-                    len(self.file_list)) + " ] " + self.file_list_image[self.index]
+                self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
+                    len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(self.obj_idx) + "]"
 
                 self.graph_maker.swap_overlay(self.graph_maker.seeds)
 
+            elif key == ord('o'):
+                if self.obj_idx >= 0:
+                    self.one_image_save_seed()
+                    self.graph_maker.clear_seeds()
+                    if self.obj_idx > 0:
+                        self.obj_idx -= 1
+                    self.graph_maker.overlay_seeds(foreground=self.one_image_foreground_seed[self.obj_idx],
+                                                   background=self.one_image_background_seed[self.obj_idx])
+                    self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
+                        len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(self.obj_idx) +"]"
+
+
+            elif key == ord('p'):
+                self.one_image_save_seed()
+                self.graph_maker.clear_seeds()
+                self.obj_idx += 1
+                try: self.one_image_foreground_seed[self.obj_idx]
+                except:
+                    print("Do Not Overlay")
+                else:
+                    self.graph_maker.overlay_seeds(foreground=self.one_image_foreground_seed[self.obj_idx],
+                                                   background=self.one_image_background_seed[self.obj_idx])
+
+                self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
+                    len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(self.obj_idx) +"]"
+
+            elif key == ord('r'):
+                if self.obj_idx > 0:
+                    try:
+                        self.one_image_foreground_seed[self.obj_idx]
+                    except:
+                        self.obj_idx -= 1
+                        self.graph_maker.clear_seeds()
+                        self.graph_maker.overlay_seeds(foreground=self.one_image_foreground_seed[self.obj_idx],
+                                                       background=self.one_image_background_seed[self.obj_idx])
+                        self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
+                            len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(
+                            self.obj_idx) + "]"
+                    else:
+                        del self.one_image_foreground_seed[self.obj_idx]
+                        del self.one_image_background_seed[self.obj_idx]
+                        self.obj_idx -= 1
+                        self.graph_maker.clear_seeds()
+                        self.graph_maker.overlay_seeds(foreground=self.one_image_foreground_seed[self.obj_idx],
+                                                       background=self.one_image_background_seed[self.obj_idx])
+                        self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
+                            len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(self.obj_idx) + "]"
 
         cv2.destroyAllWindows()
 
@@ -132,3 +203,14 @@ class CutUIFolder:
             elif event == cv2.EVENT_MOUSEMOVE:
                 if self.started_click:
                     self.graph_maker.add_seed(x - 1, y - 1, self.mode)
+
+
+    def one_image_save_seed(self):
+        try:
+            self.one_image_foreground_seed[self.obj_idx]
+        except:
+            self.one_image_foreground_seed.append(self.graph_maker.foreground_seeds)
+            self.one_image_background_seed.append(self.graph_maker.background_seeds)
+        else:
+            self.one_image_foreground_seed[self.obj_idx] = self.graph_maker.foreground_seeds
+            self.one_image_background_seed[self.obj_idx] = self.graph_maker.background_seeds

@@ -324,14 +324,14 @@ class GraphMaker:
             fpath, fname, ext = common.split_path_filename_fileext(filename)
             masked_color_image = self.get_image_with_overlay(self.segmented)
             fpath = os.path.join(fpath, outpath_masked_color)
-            fullpath = os.path.join(fpath, str(fname) + '_masked_color.jpg')
+            fullpath = os.path.join(fpath, str(fname) + '.jpg')
             print('generate image : ' + fullpath)
             cv2.imwrite(fullpath, masked_color_image)
 
         if outpath_masked_gray is not None:
             fpath, fname, ext = common.split_path_filename_fileext(filename)
             fpath = os.path.join(fpath, outpath_masked_gray)
-            fullpath = os.path.join(fpath, str(fname) + '_masked_gray.jpg')
+            fullpath = os.path.join(fpath, str(fname) + '.png')
             to_save = np.zeros([self.image.shape[0], self.image.shape[1]])
             white_img = np.zeros([self.image.shape[0], self.image.shape[1]])
             for x in range(self.image.shape[0]):
@@ -345,7 +345,7 @@ class GraphMaker:
         if outpath_cut_color is not None:
             fpath, fname, ext = common.split_path_filename_fileext(filename)
             fpath = os.path.join(fpath, outpath_cut_color)
-            fullpath = os.path.join(fpath, str(fname) + '_cut_color.jpg')
+            fullpath = os.path.join(fpath, str(fname) + '.jpg')
 
             to_save = np.zeros_like(self.image)
             np.copyto(to_save, self.image, where=self.mask)
@@ -381,15 +381,48 @@ class GraphMaker:
         for idx in self.background_seeds:
             idx = (int(idx[0]*self.ori_width), int(idx[1]*self.ori_height))
             of.writelines(str(idx) + '\n')
-
         of.close()
 
-    def load_seeds(self):
+
+
+    def save_seeds_custom(self, fore, back, index):
+        fpath, fname, ext = common.split_path_filename_fileext(self.filename)
+        seed_folder = os.path.join(fpath, "seed")
+        if os.path.isdir(seed_folder) == False:
+            os.mkdir(seed_folder)
+
+        fullpath = os.path.join(seed_folder, str(fname)+'_'+ str(index) + '_seed.txt')
+        of = open(fullpath, 'w')
+
+        # print('foreground_seeds')
+        # if self.foreground_seeds != None:
+        #     for idx in self.foreground_seeds:
+        #         print(idx)
+
+        of.writelines('foreground_seeds\n')
+        for idx in fore:
+            idx = (int(idx[0]*self.ori_width), int(idx[1]*self.ori_height))
+            of.writelines(str(idx) + '\n')
+
+
+        # print('background_seeds')
+        # if self.background_seeds != None:
+        #     for idx in self.background_seeds:
+        #         print(idx)
+
+        of.writelines('background_seeds\n')
+        for idx in back:
+            idx = (int(idx[0]*self.ori_width), int(idx[1]*self.ori_height))
+            of.writelines(str(idx) + '\n')
+        of.close()
+
+
+    def load_seeds(self, file):
         fpath, fname, ext = common.split_path_filename_fileext(self.filename)
         readfilename = os.path.join(fpath, "seed")
-        readfilename = os.path.join(readfilename, str(fname) + "_seed.txt")
+        # readfilename = os.path.join(readfilename, str(fname) + "_seed.txt")
+        readfilename = os.path.join(readfilename, file)
         readfile = open(readfilename, 'r')
-
         lines = readfile.readlines()
 
         read_mode = None

@@ -4,6 +4,7 @@ import argparse
 import cv2
 import numpy as np
 import os
+import glob
 
 from GraphMaker import GraphMaker
 
@@ -35,13 +36,13 @@ class CutCommand:
             if ext == '.jpg':
                 fullpath = os.path.join(self.filepath, filename)
                 self.graph_maker.load_image(fullpath)
-                self.graph_maker.load_seeds()
-                self.graph_maker.create_graph()
-                output_full_filename = os.path.join(self.filepath, str(fname) + "_output.jpg")
-                self.graph_maker.save_path_image(output_full_filename,
-                                                 self.folder_masked_color,
-                                                 self.folder_masked_gray,
-                                                 self.folder_cut_color)
+                for file in glob.glob(self.filepath+'/seed/'+filename.split('.')[0]+'*'):
+                    self.graph_maker.load_seeds(file)
+                    self.graph_maker.create_graph()
+                    self.graph_maker.save_path_image(file.split('_seed')[0],
+                                                     self.folder_masked_color,
+                                                     self.folder_masked_gray,
+                                                     self.folder_cut_color)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog="Interactive Graph Cut",
