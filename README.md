@@ -29,6 +29,7 @@ sh cv.sh
 ### OpenCV UI (sub-folders)
 It split calculation and user's guide
 #### draw user's guide
+ * click & move : draw seed
  * ctr+left click : remove seed
 ##### key event
  * s : previous image
@@ -36,8 +37,11 @@ It split calculation and user's guide
  * c : clear seed
  * f : clear foreground seed
  * b : clear background seed
- * t : change seed's mode (foreground mode or bach background mode)
- * ESC : exit
+ * t : change seed's mode (foreground mode or background mode)
+ * ESC : save all object seed of now image
+ * p : draw next object seed at existing image
+ * o : draw previous object seed at existing image
+ * r : remove object seed 
 
 ```bash
 sh cvFolder.sh
