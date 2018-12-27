@@ -391,7 +391,7 @@ class GraphMaker:
         if os.path.isdir(seed_folder) == False:
             os.mkdir(seed_folder)
 
-        fullpath = os.path.join(seed_folder, str(fname)+'_'+ str(index) + '_seed.txt')
+        fullpath = os.path.join(seed_folder, str(fname)+'_'+ fpath.split('/')[-1] + '_' + str(index) + '_seed.txt')
         of = open(fullpath, 'w')
 
         # print('foreground_seeds')

@@ -175,7 +175,6 @@ class CutUIFolder:
                                                        background=self.one_image_background_seed[self.obj_idx])
                         self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
                             len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(self.obj_idx) + "]"
-
         cv2.destroyAllWindows()
 
     def draw_line(self, event, x, y, flags, param):
