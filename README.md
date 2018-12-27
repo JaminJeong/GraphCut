@@ -70,7 +70,6 @@ tree -d
 ```bash
 sudo xhost +
 sudo docker pull mooneclipse03/graphcut
-export QT_X11_NO_MITSHM=1
 sudo bash start_docker.sh
 ```
 
@@ -78,7 +77,6 @@ sudo bash start_docker.sh
 ```bash
 sudo xhost +
 sudo docker build -t mooneclipse03/grpahcut .
-export QT_X11_NO_MITSHM=1
 sudo bash start_docker.sh
 ```
 
