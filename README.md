@@ -38,10 +38,11 @@ It split calculation and user's guide
  * f : clear foreground seed
  * b : clear background seed
  * t : change seed's mode (foreground mode or background mode)
- * ESC : save all object seed of now image
+ * ESC : quit program
  * p : draw next object seed at existing image
  * o : draw previous object seed at existing image
  * r : remove object seed 
+ * q : save all object seed of now image
 
 ```bash
 sh cvFolder.sh
@@ -69,7 +70,6 @@ tree -d
 ```bash
 sudo xhost +
 sudo docker pull mooneclipse03/graphcut
-export QT_X11_NO_MITSHM=1
 sudo bash start_docker.sh
 ```
 
@@ -77,7 +77,6 @@ sudo bash start_docker.sh
 ```bash
 sudo xhost +
 sudo docker build -t mooneclipse03/grpahcut .
-export QT_X11_NO_MITSHM=1
 sudo bash start_docker.sh
 ```
 
