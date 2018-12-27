@@ -81,17 +81,8 @@ class CutUIFolder:
             cv2.imshow(self.window, display_window)
             key = cv2.waitKey(20) & 0xFF
             if key == 27:
-                try:
-                    self.one_image_foreground_seed[self.obj_idx]
-                except:
-                    self.one_image_foreground_seed.append(self.graph_maker.foreground_seeds)
-                    self.one_image_background_seed.append(self.graph_maker.background_seeds)
-                else:
-                    self.one_image_foreground_seed[self.obj_idx] = self.graph_maker.foreground_seeds
-                    self.one_image_background_seed[self.obj_idx] = self.graph_maker.background_seeds
-                for i in range(len(self.one_image_foreground_seed)):
-                    self.graph_maker.save_seeds_custom(self.one_image_foreground_seed[i], self.one_image_background_seed[i], i)
-                print("Complete save seed at this image")
+                print('exit')
+                break
             elif key == ord('c'):
                 self.graph_maker.clear_seeds()
             elif key == ord('f'):
@@ -175,6 +166,18 @@ class CutUIFolder:
                                                        background=self.one_image_background_seed[self.obj_idx])
                         self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
                             len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(self.obj_idx) + "]"
+            elif key == ord('q'):
+                try:
+                    self.one_image_foreground_seed[self.obj_idx]
+                except:
+                    self.one_image_foreground_seed.append(self.graph_maker.foreground_seeds)
+                    self.one_image_background_seed.append(self.graph_maker.background_seeds)
+                else:
+                    self.one_image_foreground_seed[self.obj_idx] = self.graph_maker.foreground_seeds
+                    self.one_image_background_seed[self.obj_idx] = self.graph_maker.background_seeds
+                for i in range(len(self.one_image_foreground_seed)):
+                    self.graph_maker.save_seeds_custom(self.one_image_foreground_seed[i], self.one_image_background_seed[i], i)
+                print("Complete save seed at this image")
         cv2.destroyAllWindows()
 
     def draw_line(self, event, x, y, flags, param):
