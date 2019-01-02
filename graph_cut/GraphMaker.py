@@ -26,7 +26,6 @@ class GraphMaker:
         self.seed_overlay = None
         self.segment_overlay = None
         self.mask = None
-        # self.load_image('resource/default.jpg')
         self.background_seeds = []
         self.foreground_seeds = []
         self.background_average = np.array(3)
@@ -45,12 +44,21 @@ class GraphMaker:
         self.segment_overlay = np.zeros_like(self.image)
         self.mask = None
 
-    def resize_image(self, img, fixed_width):
+    def resize_image(self, img, screen_width, screen_height):
         self.ori_width = img.shape[1]
         self.ori_height = img.shape[0]
-        fx = float(fixed_width) / float(self.ori_width)
-        self.image = cv2.resize(img, (int(self.ori_width * fx), int(self.ori_height * fx)),
-                                interpolation=cv2.INTER_CUBIC)
+        screen_resolution = float(screen_height) / float(screen_width)
+        image_resolution = float(self.ori_height) / float(self.ori_width)
+
+        if image_resolution >= screen_resolution:
+            target_height = screen_height
+            target_width = self.ori_width * screen_height / self.ori_height
+            self.image = cv2.resize(img, (int(target_width), int(target_height)), interpolation=cv2.INTER_CUBIC)
+        else:
+            target_width = screen_width
+            target_height = self.ori_height * screen_width / self.ori_width
+            self.image = cv2.resize(img, (int(target_width), int(target_height)), interpolation=cv2.INTER_CUBIC)
+
         self.resize_width = self.image.shape[1]
         self.resize_height = self.image.shape[0]
         self.graph = np.zeros_like(self.image)
@@ -361,21 +369,10 @@ class GraphMaker:
         fullpath = os.path.join(seed_folder, str(fname) + '_seed.txt')
         of = open(fullpath, 'w')
 
-        # print('foreground_seeds')
-        # if self.foreground_seeds != None:
-        #     for idx in self.foreground_seeds:
-        #         print(idx)
-
         of.writelines('foreground_seeds\n')
         for idx in self.foreground_seeds:
             idx = (int(idx[0]*self.ori_width), int(idx[1]*self.ori_height))
             of.writelines(str(idx) + '\n')
-
-
-        # print('background_seeds')
-        # if self.background_seeds != None:
-        #     for idx in self.background_seeds:
-        #         print(idx)
 
         of.writelines('background_seeds\n')
         for idx in self.background_seeds:
@@ -394,21 +391,10 @@ class GraphMaker:
         fullpath = os.path.join(seed_folder, str(fname)+'-'+ fpath.split('/')[-1] + '-' + str(index) + '_seed.txt')
         of = open(fullpath, 'w')
 
-        # print('foreground_seeds')
-        # if self.foreground_seeds != None:
-        #     for idx in self.foreground_seeds:
-        #         print(idx)
-
         of.writelines('foreground_seeds\n')
         for idx in fore:
             idx = (int(idx[0]*self.ori_width), int(idx[1]*self.ori_height))
             of.writelines(str(idx) + '\n')
-
-
-        # print('background_seeds')
-        # if self.background_seeds != None:
-        #     for idx in self.background_seeds:
-        #         print(idx)
 
         of.writelines('background_seeds\n')
         for idx in back:
@@ -420,7 +406,6 @@ class GraphMaker:
     def load_seeds(self, file):
         fpath, fname, ext = common.split_path_filename_fileext(self.filename)
         readfilename = os.path.join(fpath, "seed")
-        # readfilename = os.path.join(readfilename, str(fname) + "_seed.txt")
         readfilename = os.path.join(readfilename, file)
         readfile = open(readfilename, 'r')
         lines = readfile.readlines()
@@ -446,17 +431,6 @@ class GraphMaker:
                 self.add_seed_make(tuple_line[0], tuple_line[1], read_mode)
 
         readfile.close()
-
-        # print('foreground_seeds')
-        # if self.foreground_seeds != None:
-        #     for idx in self.foreground_seeds:
-        #         print(idx)
-        #
-        # print('background_seeds')
-        # if self.background_seeds != None:
-        #     for idx in self.background_seeds:
-        #         print(idx)
-
 
     @staticmethod
     def get_node_num(x, y, array_shape):

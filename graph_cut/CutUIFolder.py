@@ -2,31 +2,38 @@
 import cv2
 import os
 import numpy as np
+from Tkinter import *
+import Tkinter, Tkconstants, tkFileDialog
 from GraphMaker import GraphMaker
 from graph_cut import DrawText
 
-
 class CutUIFolder:
 
-    def __init__(self, foldername):
+    def __init__(self):
         self.graph_maker = GraphMaker()
+        self.root = Tk()
         self.window = "Graph Cut"
         self.output_text = "Graph Cut"
         self.mode = self.graph_maker.foreground
         self.started_click = False
-        self.file_list = os.listdir(foldername)
-        self.foldername = foldername
+        dirName = tkFileDialog.askdirectory();
+        self.file_list = os.listdir(dirName)
+        self.foldername = dirName
         self.index = 0
         self.obj_idx = 0
         self.file_list_image = []
-        self.fixed_widht = 600
+        self.screen_width = self.root.winfo_screenwidth()-100
+        self.screen_height = self.root.winfo_screenheight()-200
+        self.root.withdraw()
+
 
         if self.mode == 1:
-            self.mode_name = 'foreground'
+            self.mode_name = 'Foreground'
         else:
-            self.mode_name = 'background'
+            self.mode_name = 'Background'
 
         if len(self.file_list) != 0:
+            self.file_list.sort()
             for idx, filename in enumerate(self.file_list):
                 if filename.find('.jpg') != -1:
                     self.file_list_image.append(filename)
@@ -36,24 +43,23 @@ class CutUIFolder:
                 self.file_list.append(os.path.join(self.foldername, self.file_list_image[idx]))
 
             self.graph_maker.load_image(self.file_list[self.index])
-            self.graph_maker.resize_image(self.graph_maker.image, self.fixed_widht)
+            self.graph_maker.resize_image(self.graph_maker.image, self.screen_width, self.screen_height)
             self.display_image = np.array(self.graph_maker.image)
-            self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
-                    len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(self.obj_idx) + "]"
+            self.output_text = self.mode_name + str("[") + str(self.index + 1) + ' / ' + str(
+                    len(self.file_list)) + "] Object_Index [" + str(self.obj_idx) + "]"
 
-        self.all_foreground_seed = [[]]*len(self.file_list_image)
-        self.all_background_seed = [[]]*len(self.file_list_image)
-
+        self.all_foreground_seed = [[]] * len(self.file_list_image)
+        self.all_background_seed = [[]] * len(self.file_list_image)
         self.one_image_foreground_seed = []
         self.one_image_background_seed = []
+
     def _refresh(self):
         self.obj_idx = 0
         self.one_image_foreground_seed = self.all_foreground_seed[self.index][:]
         self.one_image_background_seed = self.all_background_seed[self.index][:]
         self.graph_maker.clear_seeds()
         self.graph_maker.load_image(self.file_list[self.index])
-        self.graph_maker.resize_image(self.graph_maker.image, self.fixed_widht)
-
+        self.graph_maker.resize_image(self.graph_maker.image, self.screen_width, self.screen_height)
         try:
             self.graph_maker.overlay_seeds(foreground=self.one_image_foreground_seed[self.obj_idx][:],
                                        background=self.one_image_background_seed[self.obj_idx][:])
@@ -63,17 +69,25 @@ class CutUIFolder:
         self.display_image = np.array(self.graph_maker.image)
         self.mode = self.graph_maker.foreground
         if self.mode == 1:
-            self.mode_name = 'foreground'
+            self.mode_name = 'Foreground'
         else:
-            self.mode_name = 'background'
-        self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
-                    len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(self.obj_idx) + "]"
+            self.mode_name = 'Background'
+        self.output_text = self.mode_name + str("[") + str(self.index + 1) + ' / ' + str(
+                    len(self.file_list)) + "] Object_Index [" + str(self.obj_idx) + "]"
     def run(self):
         cv2.namedWindow(self.window)
         cv2.setMouseCallback(self.window, self.draw_line)
 
         while 1:
-            display = cv2.addWeighted(self.display_image, 0.9, self.graph_maker.get_overlay(), 0.4, 0.1)
+
+
+            gray_seed = cv2.cvtColor(self.graph_maker.get_overlay(), cv2.COLOR_BGR2GRAY)
+            ret, mask = cv2.threshold(gray_seed, 10, 255, cv2.THRESH_BINARY)
+            mask_inv = cv2.bitwise_not(mask)
+            img1_bg = cv2.bitwise_and(self.display_image, self.display_image, mask=mask_inv)
+            img2_fg = cv2.bitwise_and(self.graph_maker.get_overlay(), self.graph_maker.get_overlay(), mask=mask)
+
+            display = cv2.add(img1_bg, img2_fg)
             text_background = np.zeros((50, display.shape[1], 3), np.uint8)
             text_background[:] = DrawText.Color.color_string_map['white']
             display_window = cv2.vconcat((display.copy(), text_background))
@@ -110,12 +124,12 @@ class CutUIFolder:
             elif key == ord('t'):
                 self.mode = 1 - self.mode
                 if self.mode == 1:
-                    self.mode_name = 'foreground'
+                    self.mode_name = 'Foreground'
                 else:
-                    self.mode_name = 'background'
+                    self.mode_name = 'Background'
 
-                self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
-                    len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(self.obj_idx) + "]"
+                self.output_text = self.mode_name + str("[") + str(self.index + 1) + ' / ' + str(
+                    len(self.file_list)) + "] Object_Index [" + str(self.obj_idx) + "]"
 
                 self.graph_maker.swap_overlay(self.graph_maker.seeds)
 
@@ -127,8 +141,8 @@ class CutUIFolder:
                         self.obj_idx -= 1
                     self.graph_maker.overlay_seeds(foreground=self.one_image_foreground_seed[self.obj_idx],
                                                    background=self.one_image_background_seed[self.obj_idx])
-                    self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
-                        len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(self.obj_idx) +"]"
+                    self.output_text = self.mode_name + str("[") + str(self.index + 1) + ' / ' + str(
+                        len(self.file_list)) + "] Object_Index [" + str(self.obj_idx) +"]"
 
 
             elif key == ord('p'):
@@ -142,8 +156,8 @@ class CutUIFolder:
                     self.graph_maker.overlay_seeds(foreground=self.one_image_foreground_seed[self.obj_idx],
                                                    background=self.one_image_background_seed[self.obj_idx])
 
-                self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
-                    len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(self.obj_idx) +"]"
+                self.output_text = self.mode_name + str("[") + str(self.index + 1) + ' / ' + str(
+                    len(self.file_list)) + "] Object_Index [" + str(self.obj_idx) +"]"
 
             elif key == ord('r'):
                 if self.obj_idx > 0:
@@ -154,8 +168,8 @@ class CutUIFolder:
                         self.graph_maker.clear_seeds()
                         self.graph_maker.overlay_seeds(foreground=self.one_image_foreground_seed[self.obj_idx],
                                                        background=self.one_image_background_seed[self.obj_idx])
-                        self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
-                            len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(
+                        self.output_text = self.mode_name + str("[") + str(self.index + 1) + ' / ' + str(
+                            len(self.file_list)) + "] Object_Index [" + str(
                             self.obj_idx) + "]"
                     else:
                         del self.one_image_foreground_seed[self.obj_idx]
@@ -164,8 +178,8 @@ class CutUIFolder:
                         self.graph_maker.clear_seeds()
                         self.graph_maker.overlay_seeds(foreground=self.one_image_foreground_seed[self.obj_idx],
                                                        background=self.one_image_background_seed[self.obj_idx])
-                        self.output_text = self.mode_name + str("[ ") + str(self.index + 1) + ' / ' + str(
-                            len(self.file_list)) + " ]" + self.file_list_image[self.index] + "[" + str(self.obj_idx) + "]"
+                        self.output_text = self.mode_name + str("[") + str(self.index + 1) + ' / ' + str(
+                            len(self.file_list)) + "] Object_Index [" + str(self.obj_idx) + "]"
             elif key == ord('q'):
                 try:
                     self.one_image_foreground_seed[self.obj_idx]

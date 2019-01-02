@@ -5,15 +5,20 @@ import cv2
 import numpy as np
 import os
 import glob
-
+from Tkinter import *
+import Tkinter, Tkconstants, tkFileDialog
 from GraphMaker import GraphMaker
 
 class CutCommand:
 
-    def __init__(self, filepath):
+    def __init__(self):
         self.graph_maker = GraphMaker()
-        self.filepath = filepath
+        self.root = Tk()
 
+        dirName = tkFileDialog.askdirectory();
+        self.root.withdraw()
+
+        self.filepath = dirName
         self.folder_masked_color = os.path.join(self.filepath, "masked_color")
         self.folder_masked_gray = os.path.join(self.filepath, "masked_gray")
         self.folder_cut_color = os.path.join(self.filepath, "cut_color")
@@ -28,7 +33,7 @@ class CutCommand:
             print('make directory : ' + self.folder_cut_color)
             os.mkdir(self.folder_cut_color)
 
-        self.file_list = os.listdir(filepath)
+        self.file_list = os.listdir(self.filepath)
 
     def run(self):
         for filename in self.file_list:
@@ -45,11 +50,12 @@ class CutCommand:
                                                      self.folder_cut_color)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog="Interactive Graph Cut",
-                                     description="Interactively segment an image", add_help=True)
-    parser.add_argument('-i', '--INFILE', help='Input image folder to segment.', required=True)
+    # parser = argparse.ArgumentParser(prog="Interactive Graph Cut",
+    #                                  description="Interactively segment an image", add_help=True)
+    # parser.add_argument('-i', '--INFILE', help='Input image folder to segment.', required=True)
+    #
+    # args = parser.parse_args()
 
-    args = parser.parse_args()
-
-    cmd = CutCommand(args.INFILE)
+    # cmd = CutCommand(args.INFILE)
+    cmd = CutCommand()
     cmd.run()
