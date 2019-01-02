@@ -65,6 +65,7 @@ tree -d
 * numpy
 * PyMaxflow
 * PyQt4
+* tkinter
 
 ## Docker Hub
 ```bash
